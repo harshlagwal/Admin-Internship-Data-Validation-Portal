@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int               @id @default(autoincrement())
+  username      String            @unique
+  email         String            @unique
+  password_hash String
+  full_name     String
+  department    String?           @default("General")
+  status        String            @default("PENDING") // PENDING, VERIFIED, REJECTED
+  created_at    DateTime?         @default(now()) @db.Timestamptz()
+  sessions      InterviewSession[]
+
+  @@map("users")
+}
+
+model InterviewSession {
+  id               Int                    @id @default(autoincrement())
+  user_id          Int
+  user             User                   @relation(fields: [user_id], references: [id])
+  start_time       DateTime               @default(now()) @db.Timestamptz()
+  end_time         DateTime?              @db.Timestamptz()
+  total_risk_score Decimal                @default(0.00) @db.Decimal(5, 2)
+  status           String                 @default("IN_PROGRESS")
+  face_events      FacePoseEvent[]
+  object_events    ObjectDetectionEvent[]
+  audio_transcripts AudioTranscript[]
+  answer_evals     AnswerEvaluation[]
+
+  @@map("interview_sessions")
+}
+
+model FacePoseEvent {
+  id           Int              @id @default(autoincrement())
+  session_id   Int
+  session      InterviewSession @relation(fields: [session_id], references: [id])
+  timestamp    DateTime?        @default(now()) @db.Timestamptz()
+  event_type   String
+  duration_ms  Int              @default(0)
+  severity_score Int            @default(1)
+
+  @@map("face_pose_events")
+}
+
+model ObjectDetectionEvent {
+  id               Int              @id @default(autoincrement())
+  session_id       Int
+  session          InterviewSession @relation(fields: [session_id], references: [id])
+  timestamp        DateTime?        @default(now()) @db.Timestamptz()
+  object_detected  String
+  confidence_score Decimal          @db.Decimal(5, 2)
+  snapshot_url     String?
+
+  @@map("object_detection_events")
+}
+
+model AudioTranscript {
+  id                  Int              @id @default(autoincrement())
+  session_id          Int
+  session             InterviewSession @relation(fields: [session_id], references: [id])
+  start_timestamp     DateTime?        @db.Timestamptz()
+  end_timestamp       DateTime?        @db.Timestamptz()
+  text_content        String
+  is_multiple_speakers Boolean         @default(false)
+
+  @@map("audio_transcripts")
+}
+
+model AnswerEvaluation {
+  id                Int              @id @default(autoincrement())
+  session_id        Int
+  session           InterviewSession @relation(fields: [session_id], references: [id])
+  question_id       String?
+  candidate_answer  String?
+  ai_relevance_score Decimal?        @db.Decimal(5, 2)
+  ai_feedback       String?
+
+  @@map("answer_evaluations")
+}
+
+model Admin {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  full_name     String
+  password_hash String
+  role          String      @default("admin")
+  is_active     Boolean     @default(true)
+  created_at    DateTime    @default(now()) @db.Timestamptz()
+  last_login_at DateTime?   @db.Timestamptz()
+  audit_logs    AuditLog[]
+
+  @@map("admins")
+}
+
+model AuditLog {
+  id          BigInt   @id @default(autoincrement())
+  created_at  DateTime @default(now()) @db.Timestamptz()
+  admin_id    String
+  admin       Admin    @relation(fields: [admin_id], references: [id])
+  admin_name  String
+  admin_email String
+  action_type String
+  target_id   String?
+  ip_address  String?
+  details     String?
+
+  @@map("audit_logs")
+}

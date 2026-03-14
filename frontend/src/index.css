@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-main: #F8FAFC;
+    --bg-surface: #FFFFFF;
+    --bg-surface-subtle: #F1F5F9;
+    --border-main: #E2E8F0;
+    --border-subtle: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --primary-main: #2563EB;
+    --primary-hover: #1D4ED8;
+    --primary-glow: rgba(37, 99, 235, 0.1);
+    
+    color-scheme: light;
+  }
+
+  .dark {
+    --bg-main: #0a0f1e;
+    --bg-surface: #1e293b;
+    --bg-surface-subtle: #0f172a;
+    --border-main: #334155;
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --text-primary: #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --text-muted: #64748B;
+    --primary-main: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-glow: rgba(99, 102, 241, 0.15);
+    
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: var(--border-main);
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    @apply font-sans antialiased transition-colors duration-300;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-surface-subtle);
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-600 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-main);
+  }
+}
+
+@layer components {
+  /* Cards */
+  .card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-main);
+    @apply rounded-2xl shadow-sm;
+  }
+  .card-glass {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-main);
+    @apply rounded-2xl shadow-xl;
+  }
+  .dark .card-glass {
+    @apply backdrop-blur-xl bg-white/5 border-white/10;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn text-white shadow-lg hover:-translate-y-0.5;
+    background-color: var(--primary-main);
+  }
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 10px 15px -3px var(--primary-glow);
+  }
+  .btn-secondary {
+    @apply btn border;
+    background-color: var(--bg-surface-subtle);
+    border-color: var(--border-main);
+    color: var(--text-secondary);
+  }
+  .btn-secondary:hover {
+    background-color: var(--border-main);
+    color: var(--text-primary);
+  }
+  .btn-danger {
+    @apply btn bg-red-600/10 hover:bg-red-600/20 text-red-600 dark:text-red-400 border border-red-600/20 hover:border-red-500/30;
+  }
+  .btn-success {
+    @apply btn bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border border-emerald-600/20 hover:border-emerald-500/30;
+  }
+  .btn-warning {
+    @apply btn bg-amber-600/10 hover:bg-amber-600/20 text-amber-600 dark:text-amber-400 border border-amber-600/20 hover:border-amber-500/30;
+  }
+  .btn-ghost {
+    @apply btn text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50;
+  }
+  .btn-icon {
+    @apply p-2 rounded-lg transition-all duration-200 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800;
+  }
+
+  /* Form elements */
+  .input {
+    @apply w-full rounded-xl px-4 py-2.5 text-sm transition-all duration-200 border;
+    background-color: var(--bg-surface);
+    border-color: var(--border-main);
+    color: var(--text-primary);
+  }
+  .input:focus {
+    @apply outline-none ring-2;
+    border-color: var(--primary-main);
+    --tw-ring-color: var(--primary-glow);
+  }
+  .input::placeholder {
+    color: var(--text-muted);
+  }
+  
+  .label {
+    @apply block text-xs font-medium mb-1.5 uppercase tracking-wider;
+    color: var(--text-secondary);
+  }
+  .select {
+    @apply input appearance-none cursor-pointer;
+  }
+
+  /* Status badges */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border;
+  }
+  .badge-pending   { @apply bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20; }
+  .badge-active    { @apply bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20; }
+  .badge-completed { @apply bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20; }
+  .badge-flagged   { @apply bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20; }
+
+  /* Table */
+  .table-header {
+    @apply text-xs font-semibold uppercase tracking-widest px-4 py-3 text-left whitespace-nowrap;
+    color: var(--text-secondary);
+    background-color: var(--bg-surface-subtle);
+  }
+  .table-cell {
+    @apply px-4 py-3.5 text-sm whitespace-nowrap;
+    color: var(--text-secondary);
+  }
+  .table-row {
+    @apply border-b transition-colors duration-150;
+    border-color: var(--border-subtle);
+  }
+  .table-row:hover {
+    background-color: var(--bg-surface-subtle);
+  }
+
+  /* Risk indicator */
+  .risk-low    { @apply text-emerald-600 dark:text-emerald-400; }
+  .risk-medium { @apply text-amber-600 dark:text-amber-400; }
+  .risk-high   { @apply text-red-600 dark:text-red-400; }
+
+  /* Sidebar nav link */
+  .nav-link {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer;
+    color: var(--text-secondary);
+  }
+  .nav-link:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-surface-subtle);
+  }
+  .nav-link.active {
+    background-color: var(--primary-glow);
+    color: var(--primary-main);
+    @apply border;
+    border-color: rgba(37, 99, 235, 0.2);
+  }
+  .dark .nav-link.active {
+    border-color: rgba(99, 102, 241, 0.2);
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: 0 0 30px var(--primary-glow);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-primary-400 dark:to-violet-400 bg-clip-text text-transparent;
+  }
+}
+
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
