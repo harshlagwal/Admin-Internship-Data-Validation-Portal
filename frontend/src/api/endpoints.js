@@ -6,11 +6,85 @@ const USE_MOCK = true;
 
 const wrapMock = (data) => Promise.resolve({ data });
 
+// Mock support helpers (in browser only)
+const MOCK_ADMINS_KEY = 'mock_admins';
+
+const getStoredAdmins = () => {
+  try {
+    const raw = localStorage.getItem(MOCK_ADMINS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+const setStoredAdmins = (admins) => {
+  try {
+    localStorage.setItem(MOCK_ADMINS_KEY, JSON.stringify(admins));
+  } catch {
+    // ignore
+  }
+};
+
+const getCurrentMockAdmin = () => {
+  try {
+    const raw = localStorage.getItem('admin_user');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+const getDefaultMockAdmins = () => ([
+  { fullName: 'Harsh Lagwal', email: 'harsh@example.com', password: 'Password123!' }
+]);
+
+const resolveMockAdmins = () => {
+  const stored = getStoredAdmins();
+  if (stored && Array.isArray(stored) && stored.length) return stored;
+  const defaults = getDefaultMockAdmins();
+  setStoredAdmins(defaults);
+  return defaults;
+};
+
 // AUTH
-export const login = (data) => USE_MOCK ? wrapMock({ token: 'mock-token', admin: { fullName: 'Harsh Lagwal', email: 'harsh@example.com' } }) : api.post('/auth/login', data);
-export const signup = (data) => api.post('/auth/signup', data);
+export const login = (data) => {
+  if (!USE_MOCK) return api.post('/auth/login', data);
+  const { email, password } = data;
+  const admins = resolveMockAdmins();
+  const match = admins.find(a => a.email === email && a.password === password);
+  if (!match) {
+    return Promise.reject({ response: { data: { error: { message: 'Invalid email or password.' } } } });
+  }
+  return wrapMock({ token: 'mock-token', admin: { fullName: match.fullName, email: match.email } });
+};
+
+export const signup = (data) => {
+  if (!USE_MOCK) return api.post('/auth/signup', data);
+  const { fullName, email, password } = data;
+  const admins = resolveMockAdmins();
+  if (admins.find(a => a.email === email)) {
+    return Promise.reject({ response: { data: { error: { message: 'An account with this email already exists.' } } } });
+  }
+  const newAdmin = { fullName, email, password };
+  const updated = [...admins, newAdmin];
+  setStoredAdmins(updated);
+  return wrapMock({ success: true, message: 'Admin account created successfully.' });
+};
+
 export const logout = () => USE_MOCK ? wrapMock({}) : api.post('/auth/logout');
-export const getMe = () => USE_MOCK ? wrapMock({ data: { id: 1, fullName: 'Harsh Lagwal', email: 'harsh@example.com' } }) : api.get('/auth/me');
+
+export const getMe = () => {
+  if (!USE_MOCK) return api.get('/auth/me');
+  const current = getCurrentMockAdmin();
+  if (current) {
+    return wrapMock({ data: { id: 1, fullName: current.fullName, email: current.email } });
+  }
+  const [defaultAdmin] = resolveMockAdmins();
+  return wrapMock({ data: { id: 1, fullName: defaultAdmin.fullName, email: defaultAdmin.email } });
+};
 
 // CANDIDATES (users)
 export const getCandidates = (params) => {
@@ -115,12 +189,24 @@ export const getRiskSummary = (params) => {
 // AUDIT LOGS
 export const getAuditLogs = (params) => {
   if (USE_MOCK) {
+    const currentAdmin = getCurrentMockAdmin();
     let filtered = [...mock.MOCK_AUDIT_LOGS.data];
     if (params?.action) {
       filtered = filtered.filter(l => l.action_type === params.action);
     }
     if (params?.risk) {
       filtered = filtered.filter(l => l.risk_level === params.risk);
+    }
+    if (currentAdmin) {
+      filtered = filtered.map(l => {
+        // Keep system-level logs intact
+        if (l.admin_role === 'N/A') return l;
+        return {
+          ...l,
+          admin_name: currentAdmin.fullName,
+          admin_email: currentAdmin.email,
+        };
+      });
     }
     return wrapMock({ data: filtered, meta: { ...mock.MOCK_AUDIT_LOGS.meta, total: filtered.length } });
   }

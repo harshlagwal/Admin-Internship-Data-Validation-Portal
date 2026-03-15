@@ -39,6 +39,18 @@ export default function AppLayout({ children }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Keyboard shortcut for search focus
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchRef.current?.querySelector('input')?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // Handle search logic
   useEffect(() => {
     if (searchQuery.length > 1) {
@@ -177,16 +189,19 @@ export default function AppLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-2 lg:gap-4">
-            <div className="hidden lg:flex items-center relative mr-2" ref={searchRef}>
-              <Search className="absolute left-3 w-4 h-4 text-muted" />
+            <div className="hidden lg:flex items-center relative mr-2 group" ref={searchRef}>
+              <Search className="absolute left-3 w-4 h-4 text-muted group-focus-within:text-primary-main transition-colors duration-200" />
               <input 
                 type="text" 
                 placeholder="Search intern name..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => searchQuery.length > 1 && setIsSearching(true)}
-                className="bg-main border border-main rounded-xl pl-9 pr-4 py-1.5 text-xs w-64 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                className="w-64 pl-9 pr-12 py-1.5 bg-surface/80 border border-main rounded-xl text-xs placeholder-muted hover:bg-surface hover:border-muted/30 focus:bg-surface focus:border-primary-main focus:ring-4 focus:ring-primary-main/10 outline-none transition-all shadow-sm"
               />
+              <div className="absolute right-2.5 px-1.5 py-0.5 rounded-md border border-main bg-main/50 text-[9px] font-bold text-muted pointer-events-none opacity-60 group-focus-within:opacity-0 transition-opacity flex items-center gap-0.5">
+                <span className="text-[10px]">⌘</span>K
+              </div>
               
               {/* Search Results Dropdown */}
               {isSearching && (
